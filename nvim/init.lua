@@ -23,6 +23,7 @@ vim.loader.enable()
 
 ---@type NvimPlugins
 local extensions = {
+  {name = 'firenvim'}
 }
 
 if not vim.tbl_contains({vim.fn.stdpath('config'), vim.env.NVIM_UNSANDBOXED_CONFIGDIR}, vim.uv.cwd()) then

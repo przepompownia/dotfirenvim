@@ -1,0 +1,3 @@
+[submodule "firenvim"]
+	path = nvim/pack/plugins/opt/firenvim
+	url = https://github.com/glacambre/firenvim
