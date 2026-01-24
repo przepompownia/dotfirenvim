@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+runIsolated() {
+    declare -a bindPaths
+    declare nvimExecutable nvimAppDir cacheDir dataDir stateDir sandboxedNvimAppDir nvimAppName
+
+    configDir="$1"
+    nvimExecutable="$2"
+
+    if ! [[ -e $nvimExecutable ]]; then
+        echo Cannot find executable "$nvimExecutable". >&2
+        return 1
+    fi
+
+    shift 2
+
+    if [[ $NVIM ]] && systemd-detect-virt --private-users; then
+        exec "$nvimExecutable" "$@"
+        return $?
+    fi
+
+    nvimAppName="${NVIM_APPNAME:-nvim}"
+    nvimAppDir="${configDir}/${nvimAppName}"
+    sandboxedNvimAppDir=${HOME}/.config/${nvimAppName}
+    cacheDir="${configDir}/.xdg/cache"
+    dataDir="${configDir}/.xdg/data"
+    stateDir="${configDir}/.xdg/state"
+
+    mkdir -p "$nvimAppDir" "$cacheDir" "$dataDir" "$stateDir"
+
+    mapfile -t bindPaths <<-EOF
+	${nvimAppDir}:${sandboxedNvimAppDir}
+	${cacheDir}:${HOME}/.cache/${nvimAppName}
+	${dataDir}:${HOME}/.local/share/${nvimAppName}
+	${stateDir}:${HOME}/.local/state/${nvimAppName}
+	EOF
+
+    # Try to increase /proc/sys/fs/inotify/max_user_instances against "too many open files"
+    # BindPaths implies PrivateUsers: the owner inside /etc/ssh/ssh_config.d becomes`nobody`
+    # todo: C-z and fg, other groups
+    exec systemd-run --quiet --user --pty --pipe --same-dir \
+        --property=InaccessiblePaths=/etc/ssh/ssh_config.d \
+        --property=BindPaths="${bindPaths[*]}" \
+        --setenv=NVIM_UNSANDBOXED_CONFIGDIR="${nvimAppDir}" \
+        --setenv=NVIM_FROM_SRC_DIR="${NVIM_FROM_SRC_DIR}" \
+        --setenv=PWD="${PWD}" \
+        ${GIT_DIR:+--setenv=GIT_DIR="$GIT_DIR"} \
+        ${GIT_WORK_TREE:+--setenv=GIT_WORK_TREE="$GIT_WORK_TREE"} \
+        ${SSH_TTY:+--setenv=SSH_TTY="$SSH_TTY"} \
+        ${SSH_AUTH_SOCK:+--setenv=SSH_TTY="$SSH_AUTH_SOCK"} \
+        ${TMUX:+--setenv=TMUX="$TMUX"} \
+        ${COLORTERM:+--setenv=COLORTERM="$COLORTERM"} \
+        ${NVIM_LOG_FILE:+--setenv=COLORTERM="$NVIM_LOG_FILE"} \
+        -- "$nvimExecutable" "$@"
+}
