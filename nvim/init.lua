@@ -8,7 +8,7 @@ vim.g.pluginDirs = vim.iter({
 end):totable()
 
 vim.go.cmdheight = 0
-require('vim._extui').enable({enable = true, msg = {target = 'msg'}})
+require('vim._core.ui2').enable({enable = true, msg = {target = 'msg'}})
 
 for _, path in ipairs(vim.opt.packpath:get()) do
   if vim.startswith(path, '/etc/') or vim.startswith(path, '/usr/') then
