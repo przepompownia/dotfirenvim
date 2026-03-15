@@ -1,7 +1,22 @@
 #!/usr/bin/env bash
 
+mkdir -p /run/user/1000/firenvim
+chmod 700 /run/user/1000/firenvim
+cd /run/user/1000/firenvim || exit
+
+unset NVIM_LISTEN_ADDRESS
+if [ -n "$VIM" ] && [ ! -d "$VIM" ]; then
+  unset VIM
+fi
+if [ -n "$VIMRUNTIME" ] && [ ! -d "$VIMRUNTIME" ]; then
+  unset VIMRUNTIME
+fi
+
 currentDir="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
 
 . "${currentDir}/lib/nvim-isolated"
 
-runIsolated "$currentDir" "${NVIM_FROM_SRC_DIR}/bin/nvim" "$@"
+runIsolated "$currentDir" "${NVIM_FROM_SRC_DIR}/bin/nvim" \
+    --headless \
+    --cmd "so ${currentDir}/nvim/preinit.vim" \
+    -c "so ${currentDir}/nvim/postinit.vim"

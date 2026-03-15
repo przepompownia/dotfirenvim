@@ -75,6 +75,7 @@ end, opts)
 vim.go.exrc = true
 
 vim.go.laststatus = 0
+
 vim.g.firenvim_config = {
   localSettings = {
     ['.*'] = {
@@ -90,7 +91,7 @@ vim.api.nvim_create_autocmd({'BufEnter'}, {
 })
 
 vim.api.nvim_create_autocmd({'TextChanged', 'TextChangedI'}, {
-  callback = function (e)
+  callback = function ()
     if vim.g.timer_started == true then
       return
     end
